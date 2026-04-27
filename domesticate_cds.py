@@ -322,7 +322,6 @@ def domesticate_cds_with_silent_mutations(
                 "new_codon": new_codon,
                 "original_freq": original_freq,
                 "new_freq": new_freq,
-                "min_codon_freq": min_codon_freq,
             }
         )
         seq = candidate["new_seq"]
@@ -464,7 +463,6 @@ def mutate_amino_acid_with_constraints(
         "nucleotide_changes": nucleotide_changes,
         "original_freq": get_freq(orig_aa, original_codon),
         "new_freq": best["freq"],
-        "min_codon_freq": min_codon_freq,
         "sites_before": sites_before,
         "sites_after": sites_after,
     }
@@ -533,16 +531,19 @@ def format_codon_with_freq(codon: str, freq: Optional[float]) -> str:
     return f"{codon}({format_optional_float(freq)})"
 
 
-def format_codon_freq_change(
-    original_codon: str,
-    original_freq: Optional[float],
-    new_codon: str,
-    new_freq: Optional[float],
-    min_codon_freq: Optional[float] = None,
-) -> str:
+def highlight_codon_base(codon: str, codon_pos: int) -> str:
+    index = codon_pos - 1
+    if index < 0 or index >= len(codon):
+        return codon
+    return f"{codon[:index]}[{codon[index]}]{codon[index + 1:]}"
+
+
+def format_codon_change_with_freq(mutation: dict) -> str:
     return (
-        f"{format_codon_with_freq(original_codon, original_freq)} -> "
-        f"{format_codon_with_freq(new_codon, new_freq)}"
+        f"{highlight_codon_base(mutation['original_codon'], mutation['codon_pos'])}"
+        f"({format_optional_float(mutation.get('original_freq'))}) -> "
+        f"{highlight_codon_base(mutation['new_codon'], mutation['codon_pos'])}"
+        f"({format_optional_float(mutation.get('new_freq'))})"
     )
 
 
@@ -550,78 +551,13 @@ def format_mutations(mutations: Iterable[dict]) -> str:
     return "; ".join(
         (
             "pos{position}(codon{codon_index},pos{codon_pos}):"
-            "{original_base}>{new_base};"
-            "codon={codon_freq_change}"
+            "{codon_change}"
         ).format(
-            codon_freq_change=format_codon_freq_change(
-                m["original_codon"],
-                m.get("original_freq"),
-                m["new_codon"],
-                m.get("new_freq"),
-                m.get("min_codon_freq"),
-            ),
+            codon_change=format_codon_change_with_freq(m),
             **m,
         )
         for m in mutations
     )
-
-
-def format_mutation_codon_changes(mutations: Iterable[dict]) -> str:
-    return "; ".join(
-        "codon{codon_index}:{original_codon}>{new_codon}".format(**m)
-        for m in mutations
-    )
-
-
-def format_mutation_frequency_changes(mutations: Iterable[dict]) -> str:
-    return "; ".join(
-        "codon{codon_index}:{codon_freq_change}".format(
-            codon_index=m["codon_index"],
-            codon_freq_change=format_codon_freq_change(
-                m["original_codon"],
-                m.get("original_freq"),
-                m["new_codon"],
-                m.get("new_freq"),
-                m.get("min_codon_freq"),
-            ),
-        )
-        for m in mutations
-    )
-
-
-def codon_frequency_status(freq: Optional[float], min_codon_freq: Optional[float]) -> str:
-    if freq is None:
-        return "NA"
-    if min_codon_freq is None:
-        return "NA"
-    if freq >= min_codon_freq:
-        return "OK"
-    return "LOW"
-
-
-def format_mutation_frequency_statuses(mutations: Iterable[dict]) -> str:
-    return "; ".join(
-        "codon{codon_index}:{status}".format(
-            codon_index=m["codon_index"],
-            status=codon_frequency_status(m.get("new_freq"), m.get("min_codon_freq")),
-        )
-        for m in mutations
-    )
-
-
-def format_aa_change_info(aa_info: Optional[dict]) -> str:
-    if not aa_info:
-        return ""
-    return (
-        f"{aa_info['aa_change']}:codon{aa_info['codon_index']}:"
-        f"{format_codon_freq_change(aa_info['original_codon'], aa_info.get('original_freq'), aa_info['new_codon'], aa_info.get('new_freq'), aa_info.get('min_codon_freq'))}"
-    )
-
-
-def format_aa_change_frequency_status(aa_info: Optional[dict]) -> str:
-    if not aa_info:
-        return ""
-    return codon_frequency_status(aa_info.get("new_freq"), aa_info.get("min_codon_freq"))
 
 
 def print_report(info: dict) -> None:
@@ -653,23 +589,10 @@ def print_report(info: dict) -> None:
     print("\nSilent mutations:")
     if mutations:
         for mutation in mutations:
-            freq = ""
-            if mutation.get("original_freq") is not None and mutation.get("new_freq") is not None:
-                freq = (
-                    "; codon "
-                    + format_codon_freq_change(
-                        mutation["original_codon"],
-                        mutation.get("original_freq"),
-                        mutation["new_codon"],
-                        mutation.get("new_freq"),
-                        mutation.get("min_codon_freq"),
-                    )
-                )
             print(
                 "- pos {position} (codon {codon_index}, pos {codon_pos}): "
-                "{original_base}->{new_base} ({codon_change}{freq})".format(
-                    codon_change=f"{mutation['original_codon']}->{mutation['new_codon']}",
-                    freq=freq,
+                "{codon_change}".format(
+                    codon_change=format_codon_change_with_freq(mutation),
                     **mutation,
                 )
             )
@@ -681,7 +604,8 @@ def print_report(info: dict) -> None:
         print("\nAmino-acid mutation:")
         print(
             f"- {aa_info['aa_change']}: codon {aa_info['codon_index']} "
-            f"{format_codon_freq_change(aa_info['original_codon'], aa_info.get('original_freq'), aa_info['new_codon'], aa_info.get('new_freq'), aa_info.get('min_codon_freq'))}"
+            f"{format_codon_with_freq(aa_info['original_codon'], aa_info.get('original_freq'))} -> "
+            f"{format_codon_with_freq(aa_info['new_codon'], aa_info.get('new_freq'))}"
         )
 
 
@@ -776,12 +700,7 @@ def run_single(args: argparse.Namespace) -> int:
             "num_sites_after": len(scan_forbidden_motifs(final_cds, forbidden_sites)),
             "num_mutations": len(info["domestication_report"]["mutations"]),
             "mutations": format_mutations(info["domestication_report"]["mutations"]),
-            "mutation_codon_changes": format_mutation_codon_changes(info["domestication_report"]["mutations"]),
-            "mutation_codon_frequency_changes": format_mutation_frequency_changes(info["domestication_report"]["mutations"]),
-            "mutation_codon_frequency_status": format_mutation_frequency_statuses(info["domestication_report"]["mutations"]),
             "aa_change": info["aa_change"] or "",
-            "aa_change_detail": format_aa_change_info(info["aa_change_info"]),
-            "aa_change_codon_frequency_status": format_aa_change_frequency_status(info["aa_change_info"]),
         }
         with open(args.output, "w", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(row))
@@ -833,11 +752,6 @@ def run_batch(args: argparse.Namespace) -> int:
                     "site_hits_after": format_hits(hits_after),
                     "num_mutations": len(dom_report["mutations"]),
                     "mutations": format_mutations(dom_report["mutations"]),
-                    "mutation_codon_changes": format_mutation_codon_changes(dom_report["mutations"]),
-                    "mutation_codon_frequency_changes": format_mutation_frequency_changes(dom_report["mutations"]),
-                    "mutation_codon_frequency_status": format_mutation_frequency_statuses(dom_report["mutations"]),
-                    "aa_change_detail": format_aa_change_info(info["aa_change_info"]),
-                    "aa_change_codon_frequency_status": format_aa_change_frequency_status(info["aa_change_info"]),
                     "status": "ok",
                     "error": "",
                 }
@@ -856,11 +770,6 @@ def run_batch(args: argparse.Namespace) -> int:
                     "site_hits_after": "",
                     "num_mutations": "",
                     "mutations": "",
-                    "mutation_codon_changes": "",
-                    "mutation_codon_frequency_changes": "",
-                    "mutation_codon_frequency_status": "",
-                    "aa_change_detail": "",
-                    "aa_change_codon_frequency_status": "",
                     "status": "error",
                     "error": str(exc),
                 }
@@ -880,11 +789,6 @@ def run_batch(args: argparse.Namespace) -> int:
         "site_hits_after",
         "num_mutations",
         "mutations",
-        "mutation_codon_changes",
-        "mutation_codon_frequency_changes",
-        "mutation_codon_frequency_status",
-        "aa_change_detail",
-        "aa_change_codon_frequency_status",
         "status",
         "error",
     ]:

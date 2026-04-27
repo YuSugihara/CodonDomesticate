@@ -105,19 +105,13 @@ The output CSV preserves the original columns and adds:
 - `num_sites_after`
 - `site_hits_after`
 - `num_mutations`
-- `mutations` with nucleotide, codon, and codon-frequency changes
-- `mutation_codon_changes`
-- `mutation_codon_frequency_changes`
-- `mutation_codon_frequency_status`
-- `aa_change_detail`
-- `aa_change_codon_frequency_status`
+- `mutations`
 - `status`
 - `error`
 
-Codon-frequency changes are written in a compact form such as `GGT(0.10) -> GGC(0.24)`.
-`mutation_codon_frequency_status` and `aa_change_codon_frequency_status` report whether
-the new codon is above the configured `min_codon_freq` threshold: `OK`, `LOW`, or `NA`
-when codon usage was not used.
+The `mutations` column includes codon-frequency changes in a compact form such as
+`pos1836(codon612,pos3):GA[G](0.47) -> GA[A](0.53)`. The mutated nucleotide is shown
+in brackets. `NA` is shown when codon usage was not used.
 
 ## Optional Amino-Acid Mutation
 
