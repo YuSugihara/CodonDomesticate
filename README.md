@@ -2,36 +2,32 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb)
 
-This script extracts only the domestication-related workflow from
-`CodonTransformer_YS_v2026_02_17.ipynb`.
+CodonDomesticate removes restriction enzyme sites and user-defined DNA motifs from coding sequences by silent mutation. It can also introduce an optional amino-acid substitution, such as an MHD D-to-V mutation, while keeping the rest of the protein sequence unchanged.
 
-It can:
+## Features
 
-- remove restriction enzyme sites from an existing CDS by silent mutation
-- remove user-defined DNA motifs using the same silent-mutation strategy
-- process multiple CDS records from a CSV file
+- remove restriction enzyme sites from a CDS by silent mutation
+- remove custom DNA motifs using the same silent-mutation strategy
+- process one CDS or many CDS records from a CSV file
 - optionally introduce one amino-acid substitution such as `D512V`
+- use Kazusa codon usage frequencies through `python-codon-tables`
+- run from the command line or in Google Colab
 
-It does not run codon optimization and does not use the CodonTransformer deep
-learning model. Kazusa codon usage is fetched directly with
-`python-codon-tables`, which is the same lightweight package used internally by
-CodonTransformer for this task.
+## Google Colab
 
-## Files
-
-- `domesticate_cds.py`: command-line script and importable Python API for single-CDS and batch-CSV domestication
-- `notebooks/Domesticate_CDS_Colab.ipynb`: Google Colab notebook containing both single-CDS and multiple-CDS workflows
-
-## Open in Google Colab
-
-The easiest way to run this workflow is to open the notebook directly in Google
-Colab:
+Use the Colab notebook for the easiest workflow:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb)
 
-If you edit the notebook in Colab and want to keep your changes, save a copy to
-Google Drive or save the updated notebook back to GitHub through Colab's GitHub
-integration.
+The notebook supports both single-CDS and batch-CSV domestication.
+
+## NLRexpress Colab Workflow
+
+A separate Colab notebook can run NLRexpress and prepare optional MHD D-to-V mutation handoff files for CodonDomesticate.
+
+[![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/NLRexpress_Colab.ipynb)
+
+See [NLRexpress_Colab.md](NLRexpress_Colab.md) for details.
 
 ## Install
 
@@ -39,9 +35,7 @@ integration.
 pip install biopython python-codon-tables
 ```
 
-If you do not want to use codon usage frequencies and any synonymous codon is
-acceptable, `python-codon-tables` is not required. Use `--no-codon-usage` in
-that case.
+If you do not want to use codon usage frequencies and any synonymous codon is acceptable, `python-codon-tables` is not required. Use `--no-codon-usage` in that case.
 
 ## Single CDS
 
@@ -62,8 +56,7 @@ python domesticate_cds.py single \
   --output single_domesticated.csv
 ```
 
-To avoid organism-name lookup through NCBI Entrez, provide the taxonomy ID
-directly.
+To avoid organism-name lookup through NCBI Entrez, provide the taxonomy ID directly.
 
 ```bash
 python domesticate_cds.py single \
@@ -83,8 +76,7 @@ python domesticate_cds.py single \
 
 ## Multiple CDS
 
-The input CSV must contain a `sequence` column. The `name` and `aa_change`
-columns are optional.
+The input CSV must contain a `sequence` column. The `name` and `aa_change` columns are optional.
 
 ```csv
 name,sequence,aa_change
@@ -119,8 +111,7 @@ The output CSV preserves the original columns and adds:
 
 ## Optional Amino-Acid Mutation
 
-Use `--aa-change D512V` to first remove forbidden motifs by silent mutation and
-then introduce the requested amino-acid substitution.
+Use `--aa-change D512V` to first remove forbidden motifs by silent mutation and then introduce the requested amino-acid substitution.
 
 ```bash
 python domesticate_cds.py single \
@@ -129,8 +120,7 @@ python domesticate_cds.py single \
   --aa-change D512V
 ```
 
-For batch mode, add an `aa_change` column to the CSV. Leave the value empty for
-silent domestication only.
+For batch mode, add an `aa_change` column to the CSV. Leave the value empty for silent domestication only.
 
 ## Notes
 

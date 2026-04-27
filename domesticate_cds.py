@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Domesticate CDS sequences with silent mutations.
 
-This script extracts the domestication-only workflow from the CodonTransformer
-notebook. It does not import CodonTransformer or run codon optimization; Kazusa
-codon usage is fetched directly through python-codon-tables.
+This script removes forbidden DNA motifs from coding sequences while preserving
+the translated amino-acid sequence. It can also apply one requested amino-acid
+substitution after domestication.
 """
 
 from __future__ import annotations
