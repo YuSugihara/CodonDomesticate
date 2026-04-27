@@ -27,7 +27,7 @@ A separate Colab notebook can run NLRexpress and prepare optional MHD D-to-V mut
 
 [![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/NLRexpress_Colab.ipynb)
 
-See `README_NLRexpress_Colab.md` for details.
+See `NLRexpress_Colab.md` for details.
 
 ## Install
 
