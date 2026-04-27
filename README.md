@@ -1,5 +1,7 @@
 # CodonDomesticate
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb)
+
 This script extracts only the domestication-related workflow from
 `CodonTransformer_YS_v2026_02_17.ipynb`.
 
@@ -19,6 +21,31 @@ CodonTransformer for this task.
 
 - `domesticate_cds.py`: command-line script and importable Python API for single-CDS and batch-CSV domestication
 - `notebooks/Domesticate_CDS_Colab.ipynb`: Google Colab notebook containing both single-CDS and multiple-CDS workflows
+
+## Open in Google Colab
+
+The easiest way to run this workflow is to open the notebook directly in Google
+Colab:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb)
+
+You do not need to upload the notebook manually. The link opens the notebook
+from this GitHub repository:
+
+```text
+https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb
+```
+
+The Colab notebook installs `biopython` and `python-codon-tables`, then
+downloads the latest `domesticate_cds.py` from GitHub at runtime:
+
+```text
+https://raw.githubusercontent.com/YuSugihara/CodonDomesticate/main/domesticate_cds.py
+```
+
+If you edit the notebook in Colab and want to keep your changes, save a copy to
+Google Drive or save the updated notebook back to GitHub through Colab's GitHub
+integration.
 
 ## Install
 
@@ -119,40 +146,9 @@ python domesticate_cds.py single \
 For batch mode, add an `aa_change` column to the CSV. Leave the value empty for
 silent domestication only.
 
-## Google Colab
-
-Open `Domesticate_CDS_Colab.ipynb` in Google Colab. The notebook includes:
-
-- dependency installation
-- shared domestication functions
-- a single-CDS section
-- a multiple-CDS CSV section
-
-The Colab notebook installs `biopython` and `python-codon-tables`. It does not
-install or import CodonTransformer.
-
 ## Notes
 
 - The CDS length must be a multiple of 3.
 - The translated amino-acid sequence is preserved before and after silent domestication.
 - If a forbidden motif cannot be removed by synonymous mutation, the batch output reports `status=error`.
 - `python-codon-tables` can fetch Kazusa-derived codon usage tables by taxonomy ID. Internet access is required in Colab.
-
-
-## GitHub / Colab Source Download
-
-The Colab notebook downloads `domesticate_cds.py` from GitHub at runtime. After
-creating the GitHub repository, update the `github_raw_url` parameter in the
-notebook if your repository URL is different from:
-
-```text
-https://raw.githubusercontent.com/YuSugihara/CodonDomesticate/main/domesticate_cds.py
-```
-
-A typical setup is:
-
-```bash
-git remote add origin https://github.com/YuSugihara/CodonDomesticate.git
-git branch -M main
-git push -u origin main
-```
