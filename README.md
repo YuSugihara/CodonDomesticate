@@ -29,20 +29,6 @@ Colab:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb)
 
-You do not need to upload the notebook manually. The link opens the notebook
-from this GitHub repository:
-
-```text
-https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb
-```
-
-The Colab notebook installs `biopython` and `python-codon-tables`, then
-downloads the latest `domesticate_cds.py` from GitHub at runtime:
-
-```text
-https://raw.githubusercontent.com/YuSugihara/CodonDomesticate/main/domesticate_cds.py
-```
-
 If you edit the notebook in Colab and want to keep your changes, save a copy to
 Google Drive or save the updated notebook back to GitHub through Colab's GitHub
 integration.
