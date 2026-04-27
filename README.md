@@ -25,7 +25,7 @@ The notebook supports both single-CDS and batch-CSV domestication.
 
 A separate Colab notebook can run NLRexpress and prepare optional MHD D-to-V mutation handoff files for CodonDomesticate.
 
-[![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/NLRexpress_Colab.ipynb)
+[![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/develop/notebooks/NLRexpress_Colab.ipynb)
 
 See `NLRexpress_Colab.md` for details.
 

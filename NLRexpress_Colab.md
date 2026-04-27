@@ -1,13 +1,13 @@
 # NLRexpress Colab Workflow
 
-[![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/NLRexpress_Colab.ipynb)
+[![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/develop/notebooks/NLRexpress_Colab.ipynb)
 
 This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and prepares optional handoff files for CodonDomesticate.
 
 ## What It Does
 
 - accepts either protein or CDS input
-- translates CDS input before running NLRexpress
+- translates CDS input with Biopython before running NLRexpress
 - runs NLRexpress on one sequence or many sequences
 - downloads the original NLRexpress result folder as a zip archive
 - extracts MHD motif hits without modifying the original NLRexpress files
@@ -82,7 +82,7 @@ The original NLRexpress output files are not edited.
 
 ## Notes
 
-- NLRexpress itself accepts protein FASTA input; this notebook translates CDS input before running NLRexpress.
+- NLRexpress itself accepts protein FASTA input; this notebook translates CDS input with Biopython before running NLRexpress.
 - CodonDomesticate accepts CDS input and optional `aa_change` values.
 - If CDS input is provided and no MHD motif is detected, the notebook prints a warning and still writes a handoff CSV with an empty `aa_change` column.
 - If only protein sequences are available, CDS domestication cannot be performed until matching CDS sequences are provided.
