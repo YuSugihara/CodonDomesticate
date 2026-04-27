@@ -21,6 +21,8 @@ CodonTransformer for this task.
 
 - `domesticate_cds.py`: command-line script and importable Python API for single-CDS and batch-CSV domestication
 - `notebooks/Domesticate_CDS_Colab.ipynb`: Google Colab notebook containing both single-CDS and multiple-CDS workflows
+- `notebooks/NLRexpress_Colab.ipynb`: Google Colab notebook for running NLRexpress and preparing MHD D-to-V handoff files
+- `README_NLRexpress_Colab.md`: usage notes for the NLRexpress Colab workflow
 
 ## Open in Google Colab
 
@@ -32,6 +34,14 @@ Colab:
 If you edit the notebook in Colab and want to keep your changes, save a copy to
 Google Drive or save the updated notebook back to GitHub through Colab's GitHub
 integration.
+
+## NLRexpress Colab Workflow
+
+A separate notebook is available for running NLRexpress in Google Colab and preparing optional MHD D-to-V mutation handoff files for CodonDomesticate.
+
+[![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/develop/notebooks/NLRexpress_Colab.ipynb)
+
+See `README_NLRexpress_Colab.md` for details.
 
 ## Install
 
