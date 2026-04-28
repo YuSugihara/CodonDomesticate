@@ -2,7 +2,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/Domesticate_CDS_Colab.ipynb)
 
-CodonDomesticate removes restriction enzyme sites and user-defined DNA motifs from coding sequences by silent mutation. It can also introduce an optional amino-acid substitution, such as an MHD D-to-V mutation, while keeping the rest of the protein sequence unchanged.
+CodonDomesticate removes restriction enzyme sites and user-defined DNA motifs from coding sequences by silent mutation. It can also introduce an optional amino-acid substitution, such as an MHD-derived mutation, while keeping the rest of the protein sequence unchanged.
 
 ## Features
 
@@ -23,7 +23,7 @@ The notebook supports both single-CDS and batch-CSV domestication.
 
 ## NLRexpress Colab Workflow
 
-A separate Colab notebook can run NLRexpress and, only when you run its optional handoff cell, download `name,sequence,aa_change` batch input files for CodonDomesticate.
+A separate Colab notebook can run NLRexpress and, only when you run its optional handoff cell, download `name,sequence,aa_change` batch input files for CodonDomesticate. The handoff cell can also create the CSV from an existing uploaded NLRexpress result zip without rerunning NLRexpress.
 
 [![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/NLRexpress_Colab.ipynb)
 
