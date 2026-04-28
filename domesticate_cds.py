@@ -206,14 +206,18 @@ def scan_forbidden_motifs(seq: str, forbidden_sites: RestrictionSites) -> List[d
 def _attempt_fix_hit(
     seq: str,
     hit: dict,
+    forbidden_sites: RestrictionSites,
     codon_usage_table: Optional[Dict[str, float]] = None,
     min_codon_freq: float = 0.2,
+    seen_sequences: Optional[set] = None,
 ) -> Optional[dict]:
     """Try to destroy one motif with one silent mutation."""
     seq = seq.upper()
     start0 = hit["start0"]
     end0 = hit["end0"]
     old_subseq = hit["match_seq"]
+    _, current_hits = _scan_forbidden_motifs(seq, forbidden_sites)
+    current_hit_count = len(current_hits)
     best_candidate = None
 
     for pass_idx in (1, 2):
@@ -244,9 +248,26 @@ def _attempt_fix_hit(
                 new_seq = seq[:codon_start] + new_codon + seq[codon_start + 3 :]
                 if new_seq[start0:end0] == old_subseq:
                     continue
+                if seen_sequences is not None and new_seq in seen_sequences:
+                    continue
+
+                _, new_hits = _scan_forbidden_motifs(new_seq, forbidden_sites)
+                new_hit_count = len(new_hits)
+                if new_hit_count > current_hit_count:
+                    continue
 
                 score = new_freq if new_freq is not None else 0.0
-                if best_candidate is None or score > best_candidate["score"]:
+                if best_candidate is None or (
+                    new_hit_count,
+                    -score,
+                    pos,
+                    base,
+                ) < (
+                    best_candidate["new_hit_count"],
+                    -best_candidate["score"],
+                    best_candidate["pos"],
+                    best_candidate["base_new"],
+                ):
                     best_candidate = {
                         "new_seq": new_seq,
                         "pos": pos,
@@ -257,6 +278,7 @@ def _attempt_fix_hit(
                         "new_codon": new_codon,
                         "new_freq": new_freq,
                         "score": score,
+                        "new_hit_count": new_hit_count,
                     }
 
         if best_candidate is not None:
@@ -283,6 +305,7 @@ def domesticate_cds_with_silent_mutations(
     seq = cds
     mutations = []
     max_steps = max(1, 10 * len(site_hits_initial))
+    seen_sequences = {seq}
 
     for step in range(max_steps):
         _, site_hits = _scan_forbidden_motifs(seq, forbidden_sites)
@@ -293,8 +316,10 @@ def domesticate_cds_with_silent_mutations(
         candidate = _attempt_fix_hit(
             seq,
             hit,
+            forbidden_sites=forbidden_sites,
             codon_usage_table=codon_usage_table,
             min_codon_freq=min_codon_freq,
+            seen_sequences=seen_sequences,
         )
         if candidate is None:
             raise ValueError(
@@ -325,10 +350,14 @@ def domesticate_cds_with_silent_mutations(
             }
         )
         seq = candidate["new_seq"]
+        seen_sequences.add(seq)
     else:
+        _, remaining_hits = _scan_forbidden_motifs(seq, forbidden_sites)
         raise ValueError(
             "Reached the maximum number of domestication steps. "
-            "The algorithm may be stuck in a loop."
+            "The algorithm may be stuck in a loop. "
+            f"Remaining forbidden motifs: {len(remaining_hits)}"
+            f"{' (' + format_hits(remaining_hits[:5]) + ')' if remaining_hits else ''}."
         )
 
     domesticated = seq
@@ -729,8 +758,12 @@ def run_batch(args: argparse.Namespace) -> int:
         aa_change = str(row.get("aa_change", "") or "").strip()
 
         out = dict(row)
+        sites_before = None
+        protein_before = ""
         try:
             cds = normalize_dna(str(row["sequence"]))
+            protein_before = str(Seq(cds).translate())
+            sites_before = scan_forbidden_motifs(cds, forbidden_sites)
             final_cds, info = domesticate_or_mutate_cds(
                 cds=cds,
                 forbidden_sites=forbidden_sites,
@@ -764,10 +797,10 @@ def run_batch(args: argparse.Namespace) -> int:
                 {
                     "domesticated_cds": "",
                     "final_cds": "",
-                    "protein_before": "",
+                    "protein_before": protein_before,
                     "protein_after": "",
-                    "num_sites_before": "",
-                    "site_hits_before": "",
+                    "num_sites_before": len(sites_before) if sites_before is not None else "",
+                    "site_hits_before": format_hits(sites_before or []),
                     "num_sites_after": "",
                     "site_hits_after": "",
                     "num_mutations": "",
