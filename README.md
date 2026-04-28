@@ -23,7 +23,7 @@ The notebook supports both single-CDS and batch-CSV domestication.
 
 ## NLRexpress Colab Workflow
 
-A separate Colab notebook can run NLRexpress and prepare optional `name,sequence,aa_change` batch input files for CodonDomesticate, keeping MHD candidate metadata and warning in the optional batch-table step when MHD probability is below a configurable 0-100 threshold.
+A separate Colab notebook can run NLRexpress and, only when you run its optional handoff cell, download `name,sequence,aa_change` batch input files for CodonDomesticate.
 
 [![Open NLRexpress In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YuSugihara/CodonDomesticate/blob/main/notebooks/NLRexpress_Colab.ipynb)
 
