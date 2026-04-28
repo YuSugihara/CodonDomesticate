@@ -42,7 +42,7 @@ If you do not want to use codon usage frequencies and any synonymous codon is ac
 ```bash
 python domesticate_cds.py single \
   --cds ATGGGTCTCTAA \
-  --enzyme-names "BsaI;BpiI;Esp3I" \
+  --enzyme-names "BsaI;BpiI" \
   --organism "Nicotiana benthamiana"
 ```
 
@@ -51,7 +51,7 @@ You can also read the CDS from a text or FASTA file.
 ```bash
 python domesticate_cds.py single \
   --cds input_cds.fasta \
-  --enzyme-names "BsaI;BpiI;Esp3I" \
+  --enzyme-names "BsaI;BpiI" \
   --avoiding-motifs "AAAAAA;GCGGCCGC" \
   --output single_domesticated.csv
 ```
@@ -62,7 +62,7 @@ To avoid organism-name lookup through NCBI Entrez, provide the taxonomy ID direc
 python domesticate_cds.py single \
   --cds input_cds.txt \
   --taxonomy-id 4097 \
-  --enzyme-names "BsaI;BpiI;Esp3I"
+  --enzyme-names "BsaI;BpiI"
 ```
 
 Minimal example without codon usage frequencies:
@@ -90,7 +90,7 @@ Run batch domestication:
 python domesticate_cds.py batch \
   --input-csv input_cds.csv \
   --output-csv domesticated_cds_results.csv \
-  --enzyme-names "BsaI;BpiI;Esp3I" \
+  --enzyme-names "BsaI;BpiI" \
   --organism "Nicotiana benthamiana"
 ```
 
@@ -120,7 +120,7 @@ Use `--aa-change D512V` to first remove forbidden motifs by silent mutation and 
 ```bash
 python domesticate_cds.py single \
   --cds input_cds.fasta \
-  --enzyme-names "BsaI;BpiI;Esp3I" \
+  --enzyme-names "BsaI;BpiI" \
   --aa-change D512V
 ```
 

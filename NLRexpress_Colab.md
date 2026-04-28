@@ -77,7 +77,7 @@ This value is compatible with `domesticate_cds.py` and the CodonDomesticate batc
 The notebook can download:
 
 - the original NLRexpress result folder as a zip archive
-- `codon_domesticate_input_with_mhd_dv.csv` from the optional batch-table regeneration cell; this contains the `name`, `sequence`, and `aa_change` columns expected by CodonDomesticate batch mode. When a probability threshold is set, it also includes `mhd_probability_warning_threshold` and `mhd_probability_below_threshold`
+- `codon_domesticate_input_with_mhd_dv.csv` from the optional batch-table regeneration cell; this contains the `name`, `sequence`, and `aa_change` columns expected by CodonDomesticate batch mode. When a probability threshold is set, it also includes `mhd_probability_warning_threshold` and `mhd_probability_higher_threshold`
 
 The notebook also saves `single_mhd_dv_candidates.csv` or `multi_mhd_dv_candidates.csv` inside the Colab session as an intermediate table, but it does not download those files automatically. The same detailed NLRexpress information is available in the raw result archive.
 

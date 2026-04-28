@@ -650,8 +650,8 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--enzyme-names",
-        default="BsaI;BpiI;Esp3I",
-        help='Semicolon-separated restriction enzymes, e.g. "BsaI;BpiI;Esp3I".',
+        default="BsaI;BpiI",
+        help='Semicolon-separated restriction enzymes, e.g. "BsaI;BpiI".',
     )
     parser.add_argument(
         "--avoiding-motifs",
@@ -740,6 +740,7 @@ def run_batch(args: argparse.Namespace) -> int:
             )
             hits_after = scan_forbidden_motifs(final_cds, forbidden_sites)
             dom_report = info["domestication_report"]
+            mutation_details = format_mutations(dom_report["mutations"])
             out.update(
                 {
                     "domesticated_cds": info["domesticated_cds"],
@@ -751,12 +752,13 @@ def run_batch(args: argparse.Namespace) -> int:
                     "num_sites_after": len(hits_after),
                     "site_hits_after": format_hits(hits_after),
                     "num_mutations": len(dom_report["mutations"]),
-                    "mutations": format_mutations(dom_report["mutations"]),
+                    "mutations": mutation_details,
                     "status": "ok",
                     "error": "",
                 }
             )
             print(f"[ok] {name}")
+            print(f"  Silent mutations: {mutation_details or 'none'}")
         except Exception as exc:
             out.update(
                 {
