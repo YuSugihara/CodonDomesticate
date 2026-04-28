@@ -345,6 +345,8 @@ def domesticate_cds_with_silent_mutations(
                 "new_base": candidate["base_new"],
                 "original_codon": old_codon,
                 "new_codon": new_codon,
+                "original_aa": str(Seq(old_codon).translate()),
+                "new_aa": str(Seq(new_codon).translate()),
                 "original_freq": original_freq,
                 "new_freq": new_freq,
             }
@@ -566,28 +568,19 @@ def format_optional_float(value: Optional[float]) -> str:
     return f"{value:.2f}"
 
 
-def format_codon_with_freq(codon: str, freq: Optional[float]) -> str:
-    return f"{codon}({format_optional_float(freq)})"
+def codon_amino_acid(codon: str) -> str:
+    return str(Seq(codon).translate())
 
 
-def highlight_codon_base(codon: str, codon_pos: int) -> str:
-    index = codon_pos - 1
-    if index < 0 or index >= len(codon):
-        return codon
-    return f"{codon[:index]}[{codon[index]}]{codon[index + 1:]}"
-
-
-def highlight_codon_bases(codon: str, codon_positions: Iterable[int]) -> str:
-    indexes = {pos - 1 for pos in codon_positions}
-    return "".join(f"[{base}]" if index in indexes else base for index, base in enumerate(codon))
+def format_codon_with_freq(codon: str, freq: Optional[float], aa: Optional[str] = None) -> str:
+    aa_label = aa if aa is not None else codon_amino_acid(codon)
+    return f"{aa_label}[{codon}]({format_optional_float(freq)})"
 
 
 def format_codon_change_with_freq(mutation: dict) -> str:
     return (
-        f"{highlight_codon_base(mutation['original_codon'], mutation['codon_pos'])}"
-        f"({format_optional_float(mutation.get('original_freq'))}) -> "
-        f"{highlight_codon_base(mutation['new_codon'], mutation['codon_pos'])}"
-        f"({format_optional_float(mutation.get('new_freq'))})"
+        f"{format_codon_with_freq(mutation['original_codon'], mutation.get('original_freq'), mutation.get('original_aa'))} -> "
+        f"{format_codon_with_freq(mutation['new_codon'], mutation.get('new_freq'), mutation.get('new_aa'))}"
     )
 
 
@@ -619,6 +612,8 @@ def aa_change_nucleotide_mutations(aa_change_info: Optional[dict]) -> List[dict]
                 "new_base": change["to_base"],
                 "original_codon": aa_change_info["original_codon"],
                 "new_codon": aa_change_info["new_codon"],
+                "original_aa": aa_change_info["original_aa"],
+                "new_aa": aa_change_info["new_aa"],
                 "original_freq": aa_change_info.get("original_freq"),
                 "new_freq": aa_change_info.get("new_freq"),
             }
@@ -640,10 +635,8 @@ def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
     original_codon = aa_change_info["original_codon"]
     new_codon = aa_change_info["new_codon"]
     codon_change = (
-        f"{highlight_codon_bases(original_codon, codon_positions)}"
-        f"({format_optional_float(aa_change_info.get('original_freq'))}) -> "
-        f"{highlight_codon_bases(new_codon, codon_positions)}"
-        f"({format_optional_float(aa_change_info.get('new_freq'))})"
+        f"{format_codon_with_freq(original_codon, aa_change_info.get('original_freq'), aa_change_info.get('original_aa'))} -> "
+        f"{format_codon_with_freq(new_codon, aa_change_info.get('new_freq'), aa_change_info.get('new_aa'))}"
     )
     return (
         f"{position_text}(codon{aa_change_info['codon_index']},{codon_pos_text}):"

@@ -113,12 +113,13 @@ The output CSV preserves the original columns and adds:
 - `status`
 - `error`
 
-The `mutations` column includes codon-frequency changes in a compact form such as
-`pos1836(codon612,pos3):GA[G](0.47) -> GA[A](0.53)`. The mutated nucleotide is shown
-in brackets. `aa_change_mutations` uses the same style but groups all nucleotide changes
-within the requested amino-acid codon into one entry, for example
-`pos4,pos5(codon2,pos1,pos2):[C][A]T(0.12) -> [G][C]T(0.34)`. `num_mutations` is the
-total of silent domestication mutations plus aa_change nucleotide changes. `NA` is shown when codon usage was not used.
+The `mutations` column includes amino-acid, codon, and codon-frequency changes in a
+compact form such as `pos1836(codon612,pos3):E[GAG](0.47) -> E[GAA](0.53)`.
+`aa_change_mutations` uses the same style but groups all nucleotide changes within the
+requested amino-acid codon into one entry, for example
+`pos4,pos5(codon2,pos1,pos2):H[CAT](0.12) -> A[GCT](0.34)`. `num_mutations` is the
+total of silent domestication mutations plus aa_change nucleotide changes. `NA` is
+shown when codon usage was not used.
 For aa_change, `aa_change_codon_usage_status` reports `pass`, `below_min`, `missing`, or
 `not_checked` for the selected replacement codon.
 
