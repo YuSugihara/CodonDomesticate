@@ -9,10 +9,10 @@ This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and
 - accepts either protein or CDS input
 - translates CDS input with Biopython before running NLRexpress
 - runs NLRexpress on one sequence, or runs many sequences as parallel single-sequence jobs with visible progress
-- downloads the original NLRexpress result folder as a zip archive
+- downloads the NLRexpress result folder as a zip archive; for CDS input, the archive also includes the matching CDS table for later CodonDomesticate handoff
 - extracts MHD motif hits without modifying the original NLRexpress files
 - writes MHD-derived mutation candidates such as `D489V`, `H488A`, or `V489V` to a temporary CSV in the Colab session
-- can write a CodonDomesticate multiple-domestication CSV from data already present in the Colab session or from an uploaded NLRexpress result zip, asking for a matching CDS CSV only when no CDS table is available
+- can write a CodonDomesticate multiple-domestication CSV from data already present in the Colab session or from an uploaded NLRexpress result zip, using the CDS table embedded in CDS-based result zips when available
 - only writes the CodonDomesticate batch table when you run the optional handoff cell
 - lets you set an MHD probability warning threshold in the optional batch-table regeneration cell on the same 0-100 scale as the NLRexpress `probability` column, so low-confidence MHD calls are visible before mutation/domestication
 
@@ -23,7 +23,7 @@ This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and
 1. Open the NLRexpress Colab notebook.
 2. Set the input type to `CDS`.
 3. Run NLRexpress.
-4. Download the original NLRexpress result archive.
+4. Download the NLRexpress result archive, which includes the matching CDS table.
 5. Review the MHD mutation candidates shown in the notebook or in the NLRexpress result archive.
 6. Run the optional CodonDomesticate handoff cell if you want a batch domestication CSV.
 7. Open the CodonDomesticate notebook and upload that CSV for batch domestication/mutation.
@@ -34,8 +34,9 @@ This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and
 2. Run the setup cell.
 3. In the handoff cell, set `handoff_mhd_source = "upload_nlrexpress_zip"`.
 4. Upload the existing NLRexpress result zip.
-5. Upload a matching CDS CSV if the CDS table is not already present in the session.
-6. Download the CodonDomesticate batch CSV without rerunning NLRexpress.
+5. If the zip was created from CDS input with this notebook, no separate CDS CSV upload is needed.
+6. Upload a matching CDS CSV only for older zips, protein-only runs, or result archives that do not contain CDS records.
+7. Download the CodonDomesticate batch CSV without rerunning NLRexpress.
 
 ### Protein Only
 
@@ -95,12 +96,12 @@ This value is compatible with `domesticate_cds.py` and the CodonDomesticate batc
 
 The notebook can download:
 
-- the original NLRexpress result folder as a zip archive
+- the NLRexpress result folder as a zip archive. For CDS input, this archive includes `codon_domesticate_cds_sequences.csv` with `name` and `sequence` columns, so the upload-based handoff workflow can usually be completed with a single zip upload.
 - `codon_domesticate_input_with_mhd_mutations.csv` from the optional batch-table regeneration cell; this contains the `name`, `sequence`, and `aa_change` columns expected by CodonDomesticate batch mode. When a probability threshold is set, it also includes `mhd_probability_warning_threshold` and `mhd_probability_higher_threshold`. The handoff table also includes MHD review columns such as `mhd_second_residue`, `mhd_third_residue`, `mhd_third_residue_position`, `mhd_third_residue_is_d`, `mhd_third_residue_not_d`, and `mhd_mutation_strategy` when candidate metadata is available.
 
 The notebook also saves `single_mhd_mutation_candidates.csv`, `multi_mhd_mutation_candidates.csv`, or `uploaded_nlrexpress_mhd_candidates.csv` inside the Colab session as intermediate tables, but it does not download those files automatically. The same detailed NLRexpress information is available in the raw result archive.
 
-The original NLRexpress output files are not edited.
+The original NLRexpress output files are not edited; the CDS handoff table is added as a separate file in the result archive when CDS input is available.
 
 ## Notes
 
@@ -109,7 +110,7 @@ The original NLRexpress output files are not edited.
 - If no MHD motif is detected, the notebook prints a warning and still writes a handoff CSV with an empty `aa_change` column.
 - If some CDS records have no MHD candidate, or if a sequence has multiple MHD candidates, the notebook prints warnings. For multiple candidates, the highest-probability MHD candidate is used.
 - In the optional batch-table regeneration cell, if an MHD candidate probability is below the configured warning threshold, the notebook prints a warning. It also warns when `motif_seq` position 3 is not `D`; those rows retain an `aa_change` fallback and should be reviewed through `mhd_third_residue_not_d` and `mhd_mutation_strategy`. The threshold uses the same 0-100 scale as the NLRexpress `probability` column and defaults to `90`. Review the CSV before using it for CodonDomesticate.
-- The optional batch-table regeneration cell downloads only one file: `codon_domesticate_input_with_mhd_mutations.csv`. Detailed NLRexpress information remains available in the raw result archive and intermediate MHD candidate CSV.
+- The optional batch-table regeneration cell downloads only one file: `codon_domesticate_input_with_mhd_mutations.csv`. Detailed NLRexpress information remains available in the result archive and intermediate MHD candidate CSV.
 - If only protein sequences are available, CDS domestication cannot be performed until matching CDS sequences are provided.
 - The NLRexpress repository is GPL-3.0 licensed. This notebook downloads and runs NLRexpress but does not vendor its source code or modify its original result files.
 - For publication or redistribution, cite NLRexpress as requested in the upstream repository.
