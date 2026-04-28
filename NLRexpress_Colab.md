@@ -12,8 +12,8 @@ This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and
 - downloads the original NLRexpress result folder as a zip archive
 - extracts MHD motif hits without modifying the original NLRexpress files
 - writes D-to-V mutation candidates such as `D489V` to a separate CSV file
-- if CDS input is provided, writes a CodonDomesticate-ready CSV containing the CDS and `aa_change` values
-- if protein input is used first, can later merge the MHD candidates with a matching CDS CSV
+- if CDS input is provided, writes a CodonDomesticate multiple-domestication CSV containing `name`, `sequence`, `aa_change`, and MHD candidate metadata
+- can regenerate the CodonDomesticate batch table from data already present in the Colab session, asking for a matching CDS CSV only when no CDS table is available
 
 ## Recommended Workflows
 
@@ -23,7 +23,7 @@ This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and
 2. Set the input type to `CDS`.
 3. Run NLRexpress.
 4. Download the original NLRexpress result archive.
-5. Download the CodonDomesticate-ready CSV.
+5. Download the CodonDomesticate multiple-domestication CSV.
 6. Open the CodonDomesticate notebook and upload that CSV for batch domestication/mutation.
 
 ### Protein Only
@@ -76,7 +76,7 @@ The notebook can download:
 
 - the original NLRexpress result folder as a zip archive
 - `single_mhd_dv_candidates.csv` or `multi_mhd_dv_candidates.csv`
-- `single_codon_domesticate_input_with_mhd_dv.csv` or `multi_codon_domesticate_input_with_mhd_dv.csv` when CDS input is provided
+- `single_codon_domesticate_input_with_mhd_dv.csv` or `multi_codon_domesticate_input_with_mhd_dv.csv` when CDS input is provided; these contain the `name`, `sequence`, and `aa_change` columns expected by CodonDomesticate batch mode, plus MHD candidate metadata such as motif position and probability
 
 The original NLRexpress output files are not edited.
 
@@ -84,7 +84,8 @@ The original NLRexpress output files are not edited.
 
 - NLRexpress itself accepts protein FASTA input; this notebook translates CDS input with Biopython before running NLRexpress.
 - CodonDomesticate accepts CDS input and optional `aa_change` values.
-- If CDS input is provided and no MHD motif is detected, the notebook prints a warning and still writes a handoff CSV with an empty `aa_change` column.
+- If no MHD motif is detected, the notebook prints a warning and still writes a handoff CSV with an empty `aa_change` column.
+- If some CDS records have no MHD candidate, or if a sequence has multiple MHD candidates, the notebook prints warnings and writes a name-check report CSV. For multiple candidates, the highest-probability MHD candidate is used.
 - If only protein sequences are available, CDS domestication cannot be performed until matching CDS sequences are provided.
 - The NLRexpress repository is GPL-3.0 licensed. This notebook downloads and runs NLRexpress but does not vendor its source code or modify its original result files.
 - For publication or redistribution, cite NLRexpress as requested in the upstream repository.
