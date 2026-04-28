@@ -14,7 +14,7 @@ This Colab notebook runs [NLRexpress](https://github.com/eliza-m/NLRexpress) and
 - writes D-to-V mutation candidates such as `D489V` to a separate CSV file
 - if CDS input is provided, writes a CodonDomesticate multiple-domestication CSV containing `name`, `sequence`, `aa_change`, and MHD candidate metadata
 - can regenerate the CodonDomesticate batch table from data already present in the Colab session, asking for a matching CDS CSV only when no CDS table is available
-- lets you set an MHD probability warning threshold in the optional batch-table regeneration cell, so low-confidence MHD calls are visible before mutation/domestication
+- lets you set an MHD probability warning threshold in the optional batch-table regeneration cell on the same 0-100 scale as the NLRexpress `probability` column, so low-confidence MHD calls are visible before mutation/domestication
 
 ## Recommended Workflows
 
@@ -88,7 +88,7 @@ The original NLRexpress output files are not edited.
 - CodonDomesticate accepts CDS input and optional `aa_change` values.
 - If no MHD motif is detected, the notebook prints a warning and still writes a handoff CSV with an empty `aa_change` column.
 - If some CDS records have no MHD candidate, or if a sequence has multiple MHD candidates, the notebook prints warnings and writes a name-check report CSV. For multiple candidates, the highest-probability MHD candidate is used.
-- In the optional batch-table regeneration cell, if an MHD candidate probability is below the configured warning threshold, the notebook prints a warning and records the low-confidence call in the name-check report. The candidate is not automatically removed; review the CSV before using it for CodonDomesticate.
+- In the optional batch-table regeneration cell, if an MHD candidate probability is below the configured warning threshold, the notebook prints a warning and records the low-confidence call in the name-check report. The threshold uses the same 0-100 scale as the NLRexpress `probability` column and defaults to `90`. The candidate is not automatically removed; review the CSV before using it for CodonDomesticate.
 - If only protein sequences are available, CDS domestication cannot be performed until matching CDS sequences are provided.
 - The NLRexpress repository is GPL-3.0 licensed. This notebook downloads and runs NLRexpress but does not vendor its source code or modify its original result files.
 - For publication or redistribution, cite NLRexpress as requested in the upstream repository.
