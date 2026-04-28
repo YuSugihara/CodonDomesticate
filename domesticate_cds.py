@@ -459,7 +459,8 @@ def mutate_amino_acid_with_constraints(
             )
         return candidates
 
-    candidates = search_candidates(freq_filtered=True) or search_candidates(freq_filtered=False)
+    freq_filtered_candidates = search_candidates(freq_filtered=True)
+    candidates = freq_filtered_candidates or search_candidates(freq_filtered=False)
     if not candidates:
         raise ValueError(
             f"Could not find a codon for {new_aa}{aa_index} that avoids forbidden motifs."
@@ -481,6 +482,10 @@ def mutate_amino_acid_with_constraints(
 
     _, sites_before = _scan_forbidden_motifs(cds, forbidden_sites)
     _, sites_after = _scan_forbidden_motifs(new_cds, forbidden_sites)
+    codon_usage_checked = codon_usage_by_aa is not None
+    new_freq_passes_min = None
+    if codon_usage_checked:
+        new_freq_passes_min = best["freq"] is not None and best["freq"] >= min_codon_freq
     info = {
         "aa_change": aa_change,
         "aa_index": aa_index,
@@ -492,6 +497,9 @@ def mutate_amino_acid_with_constraints(
         "nucleotide_changes": nucleotide_changes,
         "original_freq": get_freq(orig_aa, original_codon),
         "new_freq": best["freq"],
+        "codon_usage_checked": codon_usage_checked,
+        "min_codon_freq": min_codon_freq,
+        "new_freq_passes_min": new_freq_passes_min,
         "sites_before": sites_before,
         "sites_after": sites_after,
     }
@@ -589,6 +597,44 @@ def format_mutations(mutations: Iterable[dict]) -> str:
     )
 
 
+def aa_change_nucleotide_mutations(aa_change_info: Optional[dict]) -> List[dict]:
+    if not aa_change_info:
+        return []
+    mutations = []
+    for change in aa_change_info.get("nucleotide_changes", []):
+        position = change["position"]
+        mutations.append(
+            {
+                "position": position,
+                "codon_index": aa_change_info["codon_index"],
+                "codon_pos": ((position - 1) % 3) + 1,
+                "original_base": change["from_base"],
+                "new_base": change["to_base"],
+                "original_codon": aa_change_info["original_codon"],
+                "new_codon": aa_change_info["new_codon"],
+                "original_freq": aa_change_info.get("original_freq"),
+                "new_freq": aa_change_info.get("new_freq"),
+            }
+        )
+    return mutations
+
+
+def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
+    return format_mutations(aa_change_nucleotide_mutations(aa_change_info))
+
+
+def aa_change_codon_usage_status(aa_change_info: Optional[dict]) -> str:
+    if not aa_change_info:
+        return ""
+    if not aa_change_info.get("codon_usage_checked"):
+        return "not_checked"
+    if aa_change_info.get("new_freq") is None:
+        return "missing"
+    if aa_change_info.get("new_freq_passes_min"):
+        return "pass"
+    return "below_min"
+
+
 def print_report(info: dict) -> None:
     """Print a compact human-readable report."""
     dom_report = info["domestication_report"]
@@ -636,6 +682,10 @@ def print_report(info: dict) -> None:
             f"{format_codon_with_freq(aa_info['original_codon'], aa_info.get('original_freq'))} -> "
             f"{format_codon_with_freq(aa_info['new_codon'], aa_info.get('new_freq'))}"
         )
+        print(f"  Codon usage: {aa_change_codon_usage_status(aa_info)}")
+        aa_change_mutations = format_aa_change_mutations(aa_info)
+        if aa_change_mutations:
+            print(f"  Nucleotide changes: {aa_change_mutations}")
 
 
 def build_forbidden_from_args(args: argparse.Namespace) -> RestrictionSites:
@@ -718,6 +768,8 @@ def run_single(args: argparse.Namespace) -> int:
     )
 
     if args.output:
+        silent_mutations = info["domestication_report"]["mutations"]
+        aa_change_mutations = aa_change_nucleotide_mutations(info["aa_change_info"])
         row = {
             "input_cds": info["input_cds"],
             "domesticated_cds": info["domesticated_cds"],
@@ -727,9 +779,13 @@ def run_single(args: argparse.Namespace) -> int:
             "num_sites_before": len(info["domestication_report"]["site_hits"]),
             "site_hits_before": format_hits(info["domestication_report"]["site_hits"]),
             "num_sites_after": len(scan_forbidden_motifs(final_cds, forbidden_sites)),
-            "num_mutations": len(info["domestication_report"]["mutations"]),
-            "mutations": format_mutations(info["domestication_report"]["mutations"]),
+            "num_silent_mutations": len(silent_mutations),
+            "num_aa_change_mutations": len(aa_change_mutations),
+            "num_mutations": len(silent_mutations) + len(aa_change_mutations),
+            "mutations": format_mutations(silent_mutations),
             "aa_change": info["aa_change"] or "",
+            "aa_change_mutations": format_mutations(aa_change_mutations),
+            "aa_change_codon_usage_status": aa_change_codon_usage_status(info["aa_change_info"]),
         }
         with open(args.output, "w", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(row))
@@ -773,7 +829,10 @@ def run_batch(args: argparse.Namespace) -> int:
             )
             hits_after = scan_forbidden_motifs(final_cds, forbidden_sites)
             dom_report = info["domestication_report"]
-            mutation_details = format_mutations(dom_report["mutations"])
+            silent_mutations = dom_report["mutations"]
+            aa_change_mutations = aa_change_nucleotide_mutations(info["aa_change_info"])
+            mutation_details = format_mutations(silent_mutations)
+            aa_change_mutation_details = format_mutations(aa_change_mutations)
             out.update(
                 {
                     "domesticated_cds": info["domesticated_cds"],
@@ -784,14 +843,19 @@ def run_batch(args: argparse.Namespace) -> int:
                     "site_hits_before": format_hits(dom_report["site_hits"]),
                     "num_sites_after": len(hits_after),
                     "site_hits_after": format_hits(hits_after),
-                    "num_mutations": len(dom_report["mutations"]),
+                    "num_silent_mutations": len(silent_mutations),
+                    "num_aa_change_mutations": len(aa_change_mutations),
+                    "num_mutations": len(silent_mutations) + len(aa_change_mutations),
                     "mutations": mutation_details,
+                    "aa_change_mutations": aa_change_mutation_details,
+                    "aa_change_codon_usage_status": aa_change_codon_usage_status(info["aa_change_info"]),
                     "status": "ok",
                     "error": "",
                 }
             )
             print(f"[ok] {name}")
             print(f"  Silent mutations: {mutation_details or 'none'}")
+            print(f"  Amino-acid mutation changes: {aa_change_mutation_details or 'none'}")
         except Exception as exc:
             out.update(
                 {
@@ -803,8 +867,12 @@ def run_batch(args: argparse.Namespace) -> int:
                     "site_hits_before": format_hits(sites_before or []),
                     "num_sites_after": "",
                     "site_hits_after": "",
+                    "num_silent_mutations": "",
+                    "num_aa_change_mutations": "",
                     "num_mutations": "",
                     "mutations": "",
+                    "aa_change_mutations": "",
+                    "aa_change_codon_usage_status": "",
                     "status": "error",
                     "error": str(exc),
                 }
@@ -822,8 +890,12 @@ def run_batch(args: argparse.Namespace) -> int:
         "site_hits_before",
         "num_sites_after",
         "site_hits_after",
+        "num_silent_mutations",
+        "num_aa_change_mutations",
         "num_mutations",
         "mutations",
+        "aa_change_mutations",
+        "aa_change_codon_usage_status",
         "status",
         "error",
     ]:
