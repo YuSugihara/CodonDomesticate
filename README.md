@@ -134,6 +134,9 @@ python domesticate_cds.py single \
 ```
 
 For batch mode, add an `aa_change` column to the CSV. Leave the value empty for silent domestication only.
+When codon usage is enabled, the amino-acid substitution first considers replacement
+codons at or above `--min-codon-freq`. Within that preferred set, it minimizes the
+number of nucleotide substitutions before using codon usage as a tie-breaker.
 
 ## Notes
 

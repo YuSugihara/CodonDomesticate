@@ -459,8 +459,9 @@ def mutate_amino_acid_with_constraints(
             )
         return candidates
 
-    freq_filtered_candidates = search_candidates(freq_filtered=True)
-    candidates = freq_filtered_candidates or search_candidates(freq_filtered=False)
+    codon_usage_preferred_candidates = search_candidates(freq_filtered=True)
+    used_codon_usage_preferred_pool = bool(codon_usage_preferred_candidates)
+    candidates = codon_usage_preferred_candidates or search_candidates(freq_filtered=False)
     if not candidates:
         raise ValueError(
             f"Could not find a codon for {new_aa}{aa_index} that avoids forbidden motifs."
@@ -500,6 +501,7 @@ def mutate_amino_acid_with_constraints(
         "codon_usage_checked": codon_usage_checked,
         "min_codon_freq": min_codon_freq,
         "new_freq_passes_min": new_freq_passes_min,
+        "used_codon_usage_preferred_pool": used_codon_usage_preferred_pool,
         "sites_before": sites_before,
         "sites_after": sites_after,
     }
