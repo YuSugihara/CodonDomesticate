@@ -64,7 +64,7 @@ example_NLR_2,ATG...
 
 ## MHD D-to-V Logic
 
-NLRexpress reports MHD hits in the short output with a motif start position and motif sequence. The conserved D is treated as the last `D` in the motif sequence. The notebook converts that residue to valine and writes the result to a separate mutation-candidate CSV, producing an `aa_change` value like:
+NLRexpress reports MHD hits in the short output with a motif start position and motif sequence. The conserved D is treated as the third residue of the MHD motif sequence. The notebook converts that residue to valine only when the third residue is `D`; otherwise, `aa_change` is left empty and the row is flagged for review. A valid candidate produces an `aa_change` value like:
 
 ```text
 D489V
@@ -77,7 +77,7 @@ This value is compatible with `domesticate_cds.py` and the CodonDomesticate batc
 The notebook can download:
 
 - the original NLRexpress result folder as a zip archive
-- `codon_domesticate_input_with_mhd_dv.csv` from the optional batch-table regeneration cell; this contains the `name`, `sequence`, and `aa_change` columns expected by CodonDomesticate batch mode. When a probability threshold is set, it also includes `mhd_probability_warning_threshold` and `mhd_probability_higher_threshold`
+- `codon_domesticate_input_with_mhd_dv.csv` from the optional batch-table regeneration cell; this contains the `name`, `sequence`, and `aa_change` columns expected by CodonDomesticate batch mode. When a probability threshold is set, it also includes `mhd_probability_warning_threshold` and `mhd_probability_higher_threshold`. The handoff table also includes `mhd_third_residue`, `mhd_third_residue_is_d`, and `mhd_third_residue_not_d` review columns when MHD candidate metadata is available.
 
 The notebook also saves `single_mhd_dv_candidates.csv` or `multi_mhd_dv_candidates.csv` inside the Colab session as an intermediate table, but it does not download those files automatically. The same detailed NLRexpress information is available in the raw result archive.
 
@@ -89,7 +89,7 @@ The original NLRexpress output files are not edited.
 - CodonDomesticate accepts CDS input and optional `aa_change` values.
 - If no MHD motif is detected, the notebook prints a warning and still writes a handoff CSV with an empty `aa_change` column.
 - If some CDS records have no MHD candidate, or if a sequence has multiple MHD candidates, the notebook prints warnings. For multiple candidates, the highest-probability MHD candidate is used.
-- In the optional batch-table regeneration cell, if an MHD candidate probability is below the configured warning threshold, the notebook prints a warning. The threshold uses the same 0-100 scale as the NLRexpress `probability` column and defaults to `90`. The candidate is not automatically removed; review the CSV before using it for CodonDomesticate.
+- In the optional batch-table regeneration cell, if an MHD candidate probability is below the configured warning threshold, the notebook prints a warning. It also warns when `motif_seq` position 3 is not `D`, because those candidates cannot produce a valid D-to-V `aa_change`. The threshold uses the same 0-100 scale as the NLRexpress `probability` column and defaults to `90`. Review the CSV before using it for CodonDomesticate.
 - The optional batch-table regeneration cell downloads only one file: `codon_domesticate_input_with_mhd_dv.csv`. Detailed NLRexpress information remains available in the raw result archive and intermediate MHD candidate CSV.
 - If only protein sequences are available, CDS domestication cannot be performed until matching CDS sequences are provided.
 - The NLRexpress repository is GPL-3.0 licensed. This notebook downloads and runs NLRexpress but does not vendor its source code or modify its original result files.
