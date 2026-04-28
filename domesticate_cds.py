@@ -575,6 +575,11 @@ def highlight_codon_base(codon: str, codon_pos: int) -> str:
     return f"{codon[:index]}[{codon[index]}]{codon[index + 1:]}"
 
 
+def highlight_codon_bases(codon: str, codon_positions: Iterable[int]) -> str:
+    indexes = {pos - 1 for pos in codon_positions}
+    return "".join(f"[{base}]" if index in indexes else base for index, base in enumerate(codon))
+
+
 def format_codon_change_with_freq(mutation: dict) -> str:
     return (
         f"{highlight_codon_base(mutation['original_codon'], mutation['codon_pos'])}"
@@ -620,7 +625,28 @@ def aa_change_nucleotide_mutations(aa_change_info: Optional[dict]) -> List[dict]
 
 
 def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
-    return format_mutations(aa_change_nucleotide_mutations(aa_change_info))
+    if not aa_change_info:
+        return ""
+    nucleotide_changes = aa_change_info.get("nucleotide_changes", [])
+    if not nucleotide_changes:
+        return ""
+
+    positions = [change["position"] for change in nucleotide_changes]
+    codon_positions = [((position - 1) % 3) + 1 for position in positions]
+    position_text = ",".join(f"pos{position}" for position in positions)
+    codon_pos_text = ",".join(f"pos{codon_pos}" for codon_pos in codon_positions)
+    original_codon = aa_change_info["original_codon"]
+    new_codon = aa_change_info["new_codon"]
+    codon_change = (
+        f"{highlight_codon_bases(original_codon, codon_positions)}"
+        f"({format_optional_float(aa_change_info.get('original_freq'))}) -> "
+        f"{highlight_codon_bases(new_codon, codon_positions)}"
+        f"({format_optional_float(aa_change_info.get('new_freq'))})"
+    )
+    return (
+        f"{position_text}(codon{aa_change_info['codon_index']},{codon_pos_text}):"
+        f"{codon_change}"
+    )
 
 
 def aa_change_codon_usage_status(aa_change_info: Optional[dict]) -> str:
@@ -784,7 +810,7 @@ def run_single(args: argparse.Namespace) -> int:
             "num_mutations": len(silent_mutations) + len(aa_change_mutations),
             "mutations": format_mutations(silent_mutations),
             "aa_change": info["aa_change"] or "",
-            "aa_change_mutations": format_mutations(aa_change_mutations),
+            "aa_change_mutations": format_aa_change_mutations(info["aa_change_info"]),
             "aa_change_codon_usage_status": aa_change_codon_usage_status(info["aa_change_info"]),
         }
         with open(args.output, "w", newline="") as handle:
@@ -832,7 +858,7 @@ def run_batch(args: argparse.Namespace) -> int:
             silent_mutations = dom_report["mutations"]
             aa_change_mutations = aa_change_nucleotide_mutations(info["aa_change_info"])
             mutation_details = format_mutations(silent_mutations)
-            aa_change_mutation_details = format_mutations(aa_change_mutations)
+            aa_change_mutation_details = format_aa_change_mutations(info["aa_change_info"])
             out.update(
                 {
                     "domesticated_cds": info["domesticated_cds"],
