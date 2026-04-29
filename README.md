@@ -103,7 +103,6 @@ The output CSV preserves the original columns and adds:
 - `num_sites_before`
 - `site_hits_before`
 - `num_sites_after`
-- `site_hits_after`
 - `num_silent_mutations`
 - `num_aa_change_mutations`
 - `num_mutations`

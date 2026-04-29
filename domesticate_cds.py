@@ -848,7 +848,6 @@ def run_batch(args: argparse.Namespace) -> int:
                 min_codon_freq=args.min_codon_freq,
                 aa_change=aa_change,
             )
-            hits_after = scan_forbidden_motifs(final_cds, forbidden_sites)
             dom_report = info["domestication_report"]
             silent_mutations = dom_report["mutations"]
             aa_change_mutations = aa_change_nucleotide_mutations(info["aa_change_info"])
@@ -862,8 +861,7 @@ def run_batch(args: argparse.Namespace) -> int:
                     "protein_after": info["protein_after"],
                     "num_sites_before": len(dom_report["site_hits"]),
                     "site_hits_before": format_hits(dom_report["site_hits"]),
-                    "num_sites_after": len(hits_after),
-                    "site_hits_after": format_hits(hits_after),
+                    "num_sites_after": len(scan_forbidden_motifs(final_cds, forbidden_sites)),
                     "num_silent_mutations": len(silent_mutations),
                     "num_aa_change_mutations": len(aa_change_mutations),
                     "num_mutations": len(silent_mutations) + len(aa_change_mutations),
@@ -887,7 +885,6 @@ def run_batch(args: argparse.Namespace) -> int:
                     "num_sites_before": len(sites_before) if sites_before is not None else "",
                     "site_hits_before": format_hits(sites_before or []),
                     "num_sites_after": "",
-                    "site_hits_after": "",
                     "num_silent_mutations": "",
                     "num_aa_change_mutations": "",
                     "num_mutations": "",
@@ -910,7 +907,6 @@ def run_batch(args: argparse.Namespace) -> int:
         "num_sites_before",
         "site_hits_before",
         "num_sites_after",
-        "site_hits_after",
         "num_silent_mutations",
         "num_aa_change_mutations",
         "num_mutations",

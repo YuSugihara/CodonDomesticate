@@ -1,2 +1,3 @@
 biopython
 python-codon-tables
+openpyxl
