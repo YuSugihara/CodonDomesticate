@@ -593,7 +593,7 @@ def format_mutations(mutations: Iterable[dict]) -> str:
             codon_change=format_codon_change_with_freq(m),
             **m,
         )
-        for m in mutations
+        for m in sorted(mutations, key=lambda mutation: int(mutation["position"]))
     )
 
 
@@ -601,7 +601,10 @@ def aa_change_nucleotide_mutations(aa_change_info: Optional[dict]) -> List[dict]
     if not aa_change_info:
         return []
     mutations = []
-    for change in aa_change_info.get("nucleotide_changes", []):
+    for change in sorted(
+        aa_change_info.get("nucleotide_changes", []),
+        key=lambda nucleotide_change: int(nucleotide_change["position"]),
+    ):
         position = change["position"]
         mutations.append(
             {
@@ -624,7 +627,10 @@ def aa_change_nucleotide_mutations(aa_change_info: Optional[dict]) -> List[dict]
 def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
     if not aa_change_info:
         return ""
-    nucleotide_changes = aa_change_info.get("nucleotide_changes", [])
+    nucleotide_changes = sorted(
+        aa_change_info.get("nucleotide_changes", []),
+        key=lambda nucleotide_change: int(nucleotide_change["position"]),
+    )
     if not nucleotide_changes:
         return ""
 
