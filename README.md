@@ -76,12 +76,12 @@ python domesticate_cds.py single \
 
 ## Multiple CDS
 
-The input CSV must contain a `sequence` column. The `name` and `aa_change` columns are optional.
+The input CSV must contain a `sequence` column. The `name` and `aa_change` columns are optional. Use comma-separated values in `aa_change` to request multiple amino-acid substitutions.
 
 ```csv
 name,sequence,aa_change
 example_1,ATGGGTCTCTAA,
-example_2,ATGGGTCTCTAA,
+example_2,ATGGGTCTCTAA,"L2E,L3E"
 ```
 
 Run batch domestication:
@@ -114,17 +114,17 @@ The output CSV preserves the original columns and adds:
 
 The `mutations` column includes amino-acid, codon, and codon-frequency changes in a
 compact form such as `pos1836(codon612,pos3):E[GAG](0.47) -> E[GAA](0.53)`.
-`aa_change_mutations` uses the same style but groups all nucleotide changes within the
+`aa_change_mutations` uses the same style but groups all nucleotide changes within each
 requested amino-acid codon into one entry, for example
 `pos4,pos5(codon2,pos1,pos2):H[CAT](0.12) -> A[GCT](0.34)`. `num_mutations` is the
 total of silent domestication mutations plus aa_change nucleotide changes. `NA` is
 shown when codon usage was not used.
 For aa_change, `aa_change_codon_usage_status` reports `pass`, `below_min`, `missing`, or
-`not_checked` for the selected replacement codon.
+`not_checked` for each selected replacement codon.
 
 ## Optional Amino-Acid Mutation
 
-Use `--aa-change D512V` to first remove forbidden motifs by silent mutation and then introduce the requested amino-acid substitution.
+Use `--aa-change D512V` to first remove forbidden motifs by silent mutation and then introduce the requested amino-acid substitution. To apply multiple substitutions, separate them with commas, for example `--aa-change L9E,L13E,L17E`.
 
 ```bash
 python domesticate_cds.py single \

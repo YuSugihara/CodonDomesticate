@@ -2,8 +2,8 @@
 """Domesticate CDS sequences with silent mutations.
 
 This script removes forbidden DNA motifs from coding sequences while preserving
-the translated amino-acid sequence. It can also apply one requested amino-acid
-substitution after domestication.
+the translated amino-acid sequence. It can also apply requested amino-acid
+substitutions after domestication.
 """
 
 from __future__ import annotations
@@ -510,6 +510,39 @@ def mutate_amino_acid_with_constraints(
     return new_cds, info
 
 
+def parse_aa_changes(aa_change: Optional[str]) -> List[str]:
+    """Parse comma-separated D456V-like amino-acid substitutions."""
+    aa_change_str = str(aa_change).strip() if aa_change is not None else ""
+    if not aa_change_str:
+        return []
+    changes = [change.strip() for change in aa_change_str.split(",")]
+    if any(not change for change in changes):
+        raise ValueError("aa_change must be comma-separated values like 'D456V,K460R'.")
+    return changes
+
+
+def apply_amino_acid_changes_with_constraints(
+    cds: str,
+    aa_change: str,
+    forbidden_sites: RestrictionSites,
+    codon_usage_by_aa: Optional[CodonUsageByAA] = None,
+    min_codon_freq: float = 0.2,
+) -> Tuple[str, List[dict]]:
+    """Apply one or more comma-separated amino-acid substitutions in order."""
+    final_cds = normalize_dna(cds)
+    aa_change_infos = []
+    for change in parse_aa_changes(aa_change):
+        final_cds, change_info = mutate_amino_acid_with_constraints(
+            cds=final_cds,
+            aa_change=change,
+            forbidden_sites=forbidden_sites,
+            codon_usage_by_aa=codon_usage_by_aa,
+            min_codon_freq=min_codon_freq,
+        )
+        aa_change_infos.append(change_info)
+    return final_cds, aa_change_infos
+
+
 def domesticate_or_mutate_cds(
     cds: str,
     forbidden_sites: RestrictionSites,
@@ -517,7 +550,7 @@ def domesticate_or_mutate_cds(
     min_codon_freq: float = 0.2,
     aa_change: Optional[str] = None,
 ) -> Tuple[str, dict]:
-    """Domesticate a CDS and optionally apply one amino-acid substitution."""
+    """Domesticate a CDS and optionally apply amino-acid substitutions."""
     cds = normalize_dna(cds)
     domesticated_cds, dom_report = domesticate_cds_with_silent_mutations(
         cds=cds,
@@ -527,10 +560,10 @@ def domesticate_or_mutate_cds(
     )
 
     final_cds = domesticated_cds
-    aa_change_info = None
+    aa_change_info = []
     aa_change_str = str(aa_change).strip() if aa_change is not None else ""
     if aa_change_str:
-        final_cds, aa_change_info = mutate_amino_acid_with_constraints(
+        final_cds, aa_change_info = apply_amino_acid_changes_with_constraints(
             cds=domesticated_cds,
             aa_change=aa_change_str,
             forbidden_sites=forbidden_sites,
@@ -601,32 +634,32 @@ def aa_change_nucleotide_mutations(aa_change_info: Optional[dict]) -> List[dict]
     if not aa_change_info:
         return []
     mutations = []
-    for change in sorted(
-        aa_change_info.get("nucleotide_changes", []),
-        key=lambda nucleotide_change: int(nucleotide_change["position"]),
-    ):
-        position = change["position"]
-        mutations.append(
-            {
-                "position": position,
-                "codon_index": aa_change_info["codon_index"],
-                "codon_pos": ((position - 1) % 3) + 1,
-                "original_base": change["from_base"],
-                "new_base": change["to_base"],
-                "original_codon": aa_change_info["original_codon"],
-                "new_codon": aa_change_info["new_codon"],
-                "original_aa": aa_change_info["original_aa"],
-                "new_aa": aa_change_info["new_aa"],
-                "original_freq": aa_change_info.get("original_freq"),
-                "new_freq": aa_change_info.get("new_freq"),
-            }
-        )
+    aa_change_infos = aa_change_info if isinstance(aa_change_info, list) else [aa_change_info]
+    for one_aa_change_info in aa_change_infos:
+        for change in sorted(
+            one_aa_change_info.get("nucleotide_changes", []),
+            key=lambda nucleotide_change: int(nucleotide_change["position"]),
+        ):
+            position = change["position"]
+            mutations.append(
+                {
+                    "position": position,
+                    "codon_index": one_aa_change_info["codon_index"],
+                    "codon_pos": ((position - 1) % 3) + 1,
+                    "original_base": change["from_base"],
+                    "new_base": change["to_base"],
+                    "original_codon": one_aa_change_info["original_codon"],
+                    "new_codon": one_aa_change_info["new_codon"],
+                    "original_aa": one_aa_change_info["original_aa"],
+                    "new_aa": one_aa_change_info["new_aa"],
+                    "original_freq": one_aa_change_info.get("original_freq"),
+                    "new_freq": one_aa_change_info.get("new_freq"),
+                }
+            )
     return mutations
 
 
-def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
-    if not aa_change_info:
-        return ""
+def format_single_aa_change_mutation(aa_change_info: dict) -> str:
     nucleotide_changes = sorted(
         aa_change_info.get("nucleotide_changes", []),
         key=lambda nucleotide_change: int(nucleotide_change["position"]),
@@ -650,9 +683,18 @@ def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
     )
 
 
-def aa_change_codon_usage_status(aa_change_info: Optional[dict]) -> str:
+def format_aa_change_mutations(aa_change_info: Optional[dict]) -> str:
     if not aa_change_info:
         return ""
+    aa_change_infos = aa_change_info if isinstance(aa_change_info, list) else [aa_change_info]
+    return "; ".join(
+        mutation
+        for mutation in (format_single_aa_change_mutation(info) for info in aa_change_infos)
+        if mutation
+    )
+
+
+def single_aa_change_codon_usage_status(aa_change_info: dict) -> str:
     if not aa_change_info.get("codon_usage_checked"):
         return "not_checked"
     if aa_change_info.get("new_freq") is None:
@@ -660,6 +702,18 @@ def aa_change_codon_usage_status(aa_change_info: Optional[dict]) -> str:
     if aa_change_info.get("new_freq_passes_min"):
         return "pass"
     return "below_min"
+
+
+def aa_change_codon_usage_status(aa_change_info: Optional[dict]) -> str:
+    if not aa_change_info:
+        return ""
+    aa_change_infos = aa_change_info if isinstance(aa_change_info, list) else [aa_change_info]
+    if len(aa_change_infos) == 1:
+        return single_aa_change_codon_usage_status(aa_change_infos[0])
+    return "; ".join(
+        f"{info['aa_change']}:{single_aa_change_codon_usage_status(info)}"
+        for info in aa_change_infos
+    )
 
 
 def print_report(info: dict) -> None:
@@ -702,17 +756,20 @@ def print_report(info: dict) -> None:
         print("- none")
 
     if info["aa_change_info"]:
-        aa_info = info["aa_change_info"]
-        print("\nAmino-acid mutation:")
-        print(
-            f"- {aa_info['aa_change']}: codon {aa_info['codon_index']} "
-            f"{format_codon_with_freq(aa_info['original_codon'], aa_info.get('original_freq'))} -> "
-            f"{format_codon_with_freq(aa_info['new_codon'], aa_info.get('new_freq'))}"
-        )
-        print(f"  Codon usage: {aa_change_codon_usage_status(aa_info)}")
-        aa_change_mutations = format_aa_change_mutations(aa_info)
-        if aa_change_mutations:
-            print(f"  Nucleotide changes: {aa_change_mutations}")
+        print("\nAmino-acid mutations:")
+        aa_change_infos = info["aa_change_info"]
+        if not isinstance(aa_change_infos, list):
+            aa_change_infos = [aa_change_infos]
+        for aa_info in aa_change_infos:
+            print(
+                f"- {aa_info['aa_change']}: codon {aa_info['codon_index']} "
+                f"{format_codon_with_freq(aa_info['original_codon'], aa_info.get('original_freq'))} -> "
+                f"{format_codon_with_freq(aa_info['new_codon'], aa_info.get('new_freq'))}"
+            )
+            print(f"  Codon usage: {single_aa_change_codon_usage_status(aa_info)}")
+            aa_change_mutations = format_single_aa_change_mutation(aa_info)
+            if aa_change_mutations:
+                print(f"  Nucleotide changes: {aa_change_mutations}")
 
 
 def build_forbidden_from_args(args: argparse.Namespace) -> RestrictionSites:
@@ -948,7 +1005,7 @@ def build_parser() -> argparse.ArgumentParser:
     single.add_argument(
         "--aa-change",
         default="",
-        help="Optional amino-acid substitution like D512V after domestication.",
+        help="Optional amino-acid substitutions like D512V or D512V,K516R after domestication.",
     )
     single.add_argument("--output", default=None, help="Optional output CSV path.")
     add_common_args(single)
